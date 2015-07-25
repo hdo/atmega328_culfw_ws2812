@@ -1,0 +1,15 @@
+Debug/
+Debug/**/* 
+Devices/**/*.hex
+*.launch
+*.bin
+*.elf
+*.a
+*.o
+*.o.d
+*.eep
+*.lss
+*.lst
+*.map
+*.sym
+build/
