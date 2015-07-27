@@ -19,6 +19,7 @@
 #include "clock.h"
 #include "fncollection.h"
 #include "fht.h"
+#include "ws2812.h"
 #ifdef HAS_LCD
 #include "pcf8833.h"
 #endif
@@ -565,6 +566,8 @@ RfAnalyze_Task(void)
     }
     */
 
+
+    // only process FS20 commands
     if(!isrep && datatype == TYPE_FS20) {
       //DC(datatype); // output 'F' for FS20
       /*
@@ -585,6 +588,10 @@ RfAnalyze_Task(void)
 
       // DH2(obuf[2]); // button code
 
+      ws2812_register_remote_button(obuf[2]);
+
+
+      /*
       switch(obuf[2]) {
       case 0: DC('0'); break;
       case 1: DC('1'); break;
@@ -596,6 +603,7 @@ RfAnalyze_Task(void)
       case 7: DC('7'); break;
       default: DC('x');
       }
+      */
       /*
       DC('-');
       DH2(obuf[3]);

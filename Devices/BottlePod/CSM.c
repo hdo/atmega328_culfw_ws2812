@@ -31,6 +31,7 @@
 #include "fastrf.h"
 #include "rf_router.h"
 #include "memory.h"
+#include "ws2812.h"
 
 #ifdef HAS_INTERTECHNO
 #include "intertechno.h"
@@ -198,10 +199,13 @@ main(void)
   // enable FS20 receive
   set_txreport("X21\n");
 
+  ws2812_init();
+
   for(;;) {
     uart_task();
     RfAnalyze_Task();
     Minute_Task();
+    ws2812_task();
   }
 
 }
