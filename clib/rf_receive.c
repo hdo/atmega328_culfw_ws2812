@@ -550,6 +550,7 @@ RfAnalyze_Task(void)
         (obuf[3] & 0x70) == 0x70))
       isrep = 1;
 
+    /*
     if(!isrep) {
       DC(datatype);
       if(nibble)
@@ -562,6 +563,46 @@ RfAnalyze_Task(void)
         DH2(cc1100_readReg(CC1100_RSSI));
       DNL();
     }
+    */
+
+    if(!isrep && datatype == TYPE_FS20) {
+      //DC(datatype); // output 'F' for FS20
+      /*
+      if(nibble)
+        oby--;
+      for(uint8_t i=0; i < oby; i++)
+        DH2(obuf[i]);
+      if(nibble)
+        DH(obuf[oby]&0xf,1);
+      if(tx_report & REP_RSSI)
+        DH2(cc1100_readReg(CC1100_RSSI));
+      DC('-');
+      DH2(obuf[0]);
+      DC('-');
+      DH2(obuf[1]);
+      DC('-');*/
+
+
+      // DH2(obuf[2]); // button code
+
+      switch(obuf[2]) {
+      case 0: DC('0'); break;
+      case 1: DC('1'); break;
+      case 2: DC('2'); break;
+      case 3: DC('3'); break;
+      case 4: DC('4'); break;
+      case 5: DC('5'); break;
+      case 6: DC('6'); break;
+      case 7: DC('7'); break;
+      default: DC('x');
+      }
+      /*
+      DC('-');
+      DH2(obuf[3]);
+      */
+      DNL();
+    }
+
 
   }
 
