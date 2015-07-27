@@ -195,25 +195,13 @@ main(void)
 
   sei();
 
+  // enable FS20 receive
+  set_txreport("X21\n");
+
   for(;;) {
     uart_task();
     RfAnalyze_Task();
     Minute_Task();
-#ifdef HAS_FASTRF
-    FastRF_Task();
-#endif
-#ifdef HAS_RF_ROUTER
-    rf_router_task();
-#endif
-#ifdef HAS_ASKSIN
-    rf_asksin_task();
-#endif
-#ifdef HAS_MORITZ
-    rf_moritz_task();
-#endif
-#ifdef HAS_IRRX
-    ir_task();
-#endif
   }
 
 }
