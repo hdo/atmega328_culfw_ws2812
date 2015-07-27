@@ -199,7 +199,7 @@ main(void)
   // enable FS20 receive
   set_txreport("X21\n");
 
-  ws2812_init();
+  ws2812_init(); // init led colors
 
   for(;;) {
     uart_task();
