@@ -2,6 +2,7 @@
 #include "ws2812.h"
 #include "light_ws2812.h"
 #include "display.h"
+#include "rf_receive.h"
 
 #define LED_COUNT 40
 #define COLOR_COUNT 141
@@ -155,9 +156,25 @@ const struct cRGB predefined[COLOR_COUNT] = {
 uint8_t last_button = NO_BUTTON;
 uint8_t current_color_index = 9; // BLUE
 struct cRGB led[LED_COUNT];
+uint32_t myTicks = 0;
+uint32_t lastEventTicks = 0;
+uint8_t pendingUpdate = 0;
 
+uint32_t math_calc_diff(uint32_t value1, uint32_t value2) {
+	if (value1 == value2) {
+		return 0;
+	}
+	if (value1 > value2) {
+		return (value1 - value2);
+	}
+	else {
+		// check for overflow
+		return (0xffffffff - value2 + value1);
+	}
+}
 
 void ws2812_update(void) {
+	pendingUpdate = 0;
 	for(uint8_t i=0; i < LED_COUNT; i++) {
 		led[i] = predefined[current_color_index];
 	}
@@ -169,21 +186,33 @@ void ws2812_init(void) {
 	ws2812_update();
 }
 
-void ws2812_task(void) {
+void ws2812_task(uint32_t currentTicks) {
+	myTicks = currentTicks;
 	if (last_button != NO_BUTTON) {
+		DS("BUTTON: ");
 		DH2(last_button);
+		DNL();
 		switch(last_button) {
 		case 0: current_color_index = 9;    break; // blue
 		case 1: current_color_index = 114;  break; // red
 		case 2: current_color_index = 51;   break; // green
 		case 3: current_color_index = 139;  break; // yellow
-		case 4: current_color_index = 10;   break; // blueviolett
+		case 4: current_color_index = 19;   break; // crimson
 		case 5: current_color_index = 2;    break; // aqua
-		case 6: current_color_index = (current_color_index+1) % COLOR_COUNT; break;
-		case 7: current_color_index = (current_color_index-1) % COLOR_COUNT; break;
+		case 6: current_color_index = (current_color_index-1) % COLOR_COUNT; break;
+		case 7: current_color_index = (current_color_index+1) % COLOR_COUNT; break;
 		}
-		ws2812_update();
+		DS("COLOR: ");
+		DH2(current_color_index);
+		DNL();
 		last_button = NO_BUTTON;
+		lastEventTicks = currentTicks;
+		pendingUpdate = 1;
+		//ws2812_update();
+	}
+	if (pendingUpdate && math_calc_diff(currentTicks, lastEventTicks) > 15) {
+		lastEventTicks = currentTicks; // reset
+		ws2812_update();
 	}
 	return;
 }

@@ -573,8 +573,14 @@ RfAnalyze_Task(void)
       /*
       if(nibble)
         oby--;
-      for(uint8_t i=0; i < oby; i++)
+        */
+
+      // print remote code
+      for(uint8_t i=0; i < oby; i++) {
         DH2(obuf[i]);
+      }
+      DNL();
+      /*
       if(nibble)
         DH(obuf[oby]&0xf,1);
       if(tx_report & REP_RSSI)
@@ -588,27 +594,12 @@ RfAnalyze_Task(void)
 
       // DH2(obuf[2]); // button code
 
-      ws2812_register_remote_button(obuf[2]);
-
-
-      /*
-      switch(obuf[2]) {
-      case 0: DC('0'); break;
-      case 1: DC('1'); break;
-      case 2: DC('2'); break;
-      case 3: DC('3'); break;
-      case 4: DC('4'); break;
-      case 5: DC('5'); break;
-      case 6: DC('6'); break;
-      case 7: DC('7'); break;
-      default: DC('x');
+      // only accept code from remote with CODE 0X1BE4
+      if (obuf[0] == 0x1B && obuf[1] == 0xE4) {
+          ws2812_register_remote_button(obuf[2]);
       }
-      */
-      /*
-      DC('-');
-      DH2(obuf[3]);
-      */
-      DNL();
+
+      //DNL();
     }
 
 

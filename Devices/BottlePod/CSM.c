@@ -108,6 +108,7 @@ const PROGMEM t_fntab fntab[] = {
   { 0, 0 },
 };
 
+volatile uint32_t ticks;
 
 void
 start_bootloader(void)
@@ -205,7 +206,7 @@ main(void)
     uart_task();
     RfAnalyze_Task();
     Minute_Task();
-    ws2812_task();
+    ws2812_task(ticks);
   }
 
 }
