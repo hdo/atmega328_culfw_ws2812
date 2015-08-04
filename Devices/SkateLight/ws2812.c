@@ -175,19 +175,120 @@ uint32_t math_calc_diff(uint32_t value1, uint32_t value2) {
 
 void ws2812_update(void) {
 	pendingUpdate = 0;
+	/*
 	for(uint8_t i=0; i < LED_COUNT; i++) {
 		led[i] = predefined[current_color_index];
 	}
+	*/
 	ws2812_setleds(led, LED_COUNT);
 }
 
 void ws2812_init(void) {
 	current_color_index = 114; // BLUE
+
+
+	// blue
+	led[0] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
+	led[1] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
+	led[2] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
+	led[3] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+	led[4] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+	led[5] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+	led[6] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
+	led[7] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
+	led[8] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
+	led[9] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+	led[10] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+	led[11] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+
+
+	/*
+	// red
+	led[0] = (struct cRGB){.g = 0, .b =0, .r=0x6F};
+	led[1] = (struct cRGB){.g = 0, .b =0, .r=0xFF};
+	led[2] = (struct cRGB){.g = 0, .b =0, .r=0x6F};
+	led[3] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
+	led[4] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
+	led[5] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
+	led[6] = (struct cRGB){.g = 0, .b =0, .r=0x6F};
+	led[7] = (struct cRGB){.g = 0, .b =0, .r=0xFF};
+	led[8] = (struct cRGB){.g = 0, .b =0, .r=0x6F};
+	led[9] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
+	led[10] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
+	led[11] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
+*/
+
+
+	/*
+
+	// green
+	led[0] = (struct cRGB){.r = 0, .b =0, .g=0x6F};
+	led[1] = (struct cRGB){.r = 0, .b =0, .g=0xFF};
+	led[2] = (struct cRGB){.r = 0, .b =0, .g=0x6F};
+	led[3] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
+	led[4] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
+	led[5] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
+	led[6] = (struct cRGB){.r = 0, .b =0, .g=0x6F};
+	led[7] = (struct cRGB){.r = 0, .b =0, .g=0xFF};
+	led[8] = (struct cRGB){.r = 0, .b =0, .g=0x6F};
+	led[9] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
+	led[10] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
+	led[11] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
+	*/
+
+
+	/*
+	// crimson
+	led[1] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
+	led[2] = (struct cRGB){.g = 0x04, .r = 0xCC, .b=0x2C};
+	led[3] = (struct cRGB){.g = 0x00, .r = 0xBC, .b=0x1C};
+	led[4] = (struct cRGB){.g = 0x00, .r = 0xAC, .b=0x0C};
+	led[5] = (struct cRGB){.g = 0x00, .r = 0x7C, .b=0x10};
+	led[6] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
+	led[7] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
+	led[8] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
+	led[9] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
+	led[10] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
+	led[11] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
+*/
+
+	/*
+	// colorful
+	led[0] = (struct cRGB){.g = 0, .r =0, .b=0x50};
+	led[1] = (struct cRGB){.g = 0, .r = 0x50, .b=0x00};
+	led[2] = (struct cRGB){.g = 0x50, .r =0, .b=0x00};
+	led[3] = (struct cRGB){.g = 0, .r =0, .b=0x50};
+	led[4] = (struct cRGB){.g = 0, .r = 0x50, .b=0x00};
+	led[5] = (struct cRGB){.g = 0x50, .r =0, .b=0x00};
+	led[6] = (struct cRGB){.g = 0, .r =0, .b=0x50};
+	led[7] = (struct cRGB){.g = 0, .r = 0x50, .b=0x00};
+	led[8] = (struct cRGB){.g = 0x50, .r =0, .b=0x00};
+	led[9] = (struct cRGB){.g = 0, .r =0, .b=0x50};
+	led[10] = (struct cRGB){.g = 0, .r = 0x50, .b=0x00};
+	led[11] = (struct cRGB){.g = 0x50, .r =0, .b=0x00};
+*/
 	ws2812_update();
 }
 
+void ws2812_shift(void) {
+	uint8_t tempg, tempr, tempb;
+	tempg = led[0].g;
+	tempr = led[0].r;
+	tempb = led[0].b;
+
+	for(int i=0; i < LED_COUNT-1; i++) {
+		led[i] = led[i+1];
+	}
+	led[LED_COUNT-1].r = tempr;
+	led[LED_COUNT-1].g = tempg;
+	led[LED_COUNT-1].b = tempb;
+}
+
+
 void ws2812_task(uint32_t currentTicks) {
 	myTicks = currentTicks;
+
+	/*
 	if (last_button != NO_BUTTON) {
 		DS("BUTTON: ");
 		DH2(last_button);
@@ -210,10 +311,20 @@ void ws2812_task(uint32_t currentTicks) {
 		pendingUpdate = 1;
 		//ws2812_update();
 	}
+	*/
+	/*
 	if (pendingUpdate && math_calc_diff(currentTicks, lastEventTicks) > 15) {
 		lastEventTicks = currentTicks; // reset
 		ws2812_update();
 	}
+	*/
+
+	if (math_calc_diff(currentTicks, lastEventTicks) > 5) {
+		lastEventTicks = currentTicks;
+		ws2812_shift();
+		ws2812_update();
+	}
+
 	return;
 }
 
@@ -221,3 +332,4 @@ void ws2812_register_remote_button(uint8_t button) {
 	last_button = button;
 	return;
 }
+
