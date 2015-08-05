@@ -167,6 +167,7 @@ uint8_t current_color_index = 9; // BLUE
 struct cRGB led[LED_COUNT];
 uint32_t myTicks = 0;
 uint32_t lastEventTicks = 0;
+uint32_t lastUpdateTicks = 0;
 uint8_t pendingUpdate = 0;
 uint8_t currentFadeDirection = HIGH_TO_LOW;
 uint8_t wait_low_counter = WAIT_LOW_VALUE;
@@ -228,6 +229,7 @@ void ws2812_set_fade_effect(uint8_t color_index) {
 }
 
 void ws2812_set_none_effect(uint8_t color_index) {
+	pendingUpdate = 1;
 	current_effect_mode = EFFECT_NONE;
 
 	for(int i=0; i < LED_COUNT; i++) {
@@ -270,20 +272,16 @@ void ws2812_init(void) {
 	//ws2812_set_fade_effect(current_color_index);
 	//ws2812_set_none_effect(current_color_index);
 	ws2812_update();
+	//pendingUpdate = 1;
 }
 
-void ws2812_shift(void) {
-	uint8_t tempg, tempr, tempb;
-	tempg = led[0].g;
-	tempr = led[0].r;
-	tempb = led[0].b;
+void ws2812_spin(void) {
+	struct cRGB temp = led[0];
 
 	for(int i=0; i < LED_COUNT-1; i++) {
 		led[i] = led[i+1];
 	}
-	led[LED_COUNT-1].r = tempr;
-	led[LED_COUNT-1].g = tempg;
-	led[LED_COUNT-1].b = tempb;
+	led[LED_COUNT-1] = temp;
 }
 
 void ws2812_fade(void) {
@@ -354,11 +352,13 @@ void ws2812_task(uint32_t currentTicks) {
 		DNL();
 		last_button = NO_BUTTON;
 		lastEventTicks = currentTicks;
-		pendingUpdate = 1;
+		//pendingUpdate = 1;
 	}
+
 	/*
-	if (pendingUpdate && math_calc_diff(currentTicks, lastEventTicks) > 15) {
-		lastEventTicks = currentTicks; // reset
+	if (pendingUpdate && math_calc_diff(currentTicks, lastUpdateTicks) > 15) {
+		lastUpdateTicks = currentTicks; // reset
+		pendingUpdate = 0;
 		ws2812_update();
 	}
 	*/
@@ -366,8 +366,8 @@ void ws2812_task(uint32_t currentTicks) {
 	if (math_calc_diff(currentTicks, lastEventTicks) > 5) {
 		lastEventTicks = currentTicks;
 		switch(current_effect_mode) {
-			case EFFECT_NONE:ws2812_update(); break;
-			case EFFECT_SPIN:ws2812_shift(); ws2812_update(); break;
+			//case EFFECT_NONE:pendingUpdate = 1; break;
+			case EFFECT_SPIN:ws2812_spin(); ws2812_update(); break;
 			case EFFECT_FADE:ws2812_fade(); ws2812_update(); break;
 		}
 	}
