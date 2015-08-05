@@ -16,7 +16,6 @@
 //#define CSMV4
 //#define CSMV3
 //#define TUXRAIL
-//#define TUXRADIO
 
 #ifdef CSMV4
 #define SPI_PORT		PORTB
@@ -73,12 +72,6 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
-#ifdef TUXRADIO
-
-#define HAS_IRRX
-#define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
-
-#endif
 
 #else
 
