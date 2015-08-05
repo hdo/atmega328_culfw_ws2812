@@ -27,7 +27,6 @@
 #include "rf_receive.h"
 #include "rf_send.h"
 #include "ttydata.h"
-#include "fht.h"
 #include "fastrf.h"
 #include "rf_router.h"
 #include "memory.h"
@@ -70,7 +69,6 @@ const PROGMEM t_fntab fntab[] = {
 //  { 'S', esa_send },
 #endif
   { 'R', read_eeprom },
-  { 'T', fhtsend },
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
@@ -156,7 +154,6 @@ main(void)
   uart_init( UART_BAUD_SELECT_DOUBLE_SPEED(UART_BAUD_RATE,F_CPU) );
 
 
-  fht_init();
   tx_init();
   input_handle_func = analyze_ttydata;
 

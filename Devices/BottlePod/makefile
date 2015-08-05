@@ -26,16 +26,12 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_receive.c                              \
 		../../clib/rf_router.c                               \
-		../../clib/fht.c                                     \
-		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                  \
 		../../clib/serial.c                                  \
 		../../clib/ttydata.c                                 \
 		../../clib/light_ws2812.c                            \
 		./ws2812.c                            \
 		../../clib/spi.c                                     
-#		../../clib/ir.c                                      \
-#		../../clib/irmp.c                                    \
 
 
 OPT = s
