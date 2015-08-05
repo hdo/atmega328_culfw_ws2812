@@ -345,7 +345,7 @@ void ws2812_task(uint32_t currentTicks) {
 		case 4: ws2812_set_spin_effect(current_color_index); break;
 		case 5: ws2812_set_fade_effect(current_color_index); break;
 		case 6: ws2812_set_none_effect(current_color_index); break;
-		case 7: ws2812_set_none_effect(9); break; // clear/black
+		case 7: ws2812_set_none_effect(7); break; // clear/black
 		}
 		DS("COLOR: ");
 		DH2(current_color_index);
@@ -363,7 +363,12 @@ void ws2812_task(uint32_t currentTicks) {
 	}
 	*/
 
-	if (math_calc_diff(currentTicks, lastEventTicks) > 5) {
+	if (pendingUpdate) {
+		ws2812_update();
+	}
+
+	// NOTE: a value < 10 prevent the remote commands to be correctly processed
+	if (math_calc_diff(currentTicks, lastEventTicks) > 10) {
 		lastEventTicks = currentTicks;
 		switch(current_effect_mode) {
 			//case EFFECT_NONE:pendingUpdate = 1; break;
