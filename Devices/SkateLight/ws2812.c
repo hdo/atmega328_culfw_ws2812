@@ -7,6 +7,11 @@
 #define LED_COUNT 12
 #define COLOR_COUNT 141
 #define NO_BUTTON 0xFF
+#define LOW_TO_HIGH 0
+#define HIGH_TO_LOW 1
+#define WAIT_LOW 2
+
+#define WAIT_LOW_VALUE 5
 
 
 const struct cRGB predefined[COLOR_COUNT] = {
@@ -159,6 +164,8 @@ struct cRGB led[LED_COUNT];
 uint32_t myTicks = 0;
 uint32_t lastEventTicks = 0;
 uint8_t pendingUpdate = 0;
+uint8_t currentFadeDirection = HIGH_TO_LOW;
+uint8_t wait_low_counter = WAIT_LOW_VALUE;
 
 uint32_t math_calc_diff(uint32_t value1, uint32_t value2) {
 	if (value1 == value2) {
@@ -187,7 +194,13 @@ void ws2812_init(void) {
 	current_color_index = 114; // BLUE
 
 
-	// blue
+	// set blue
+	for(int i=0; i < LED_COUNT; i++) {
+		led[i] = (struct cRGB) {.r=0, .g=0, .b=0xFF};
+	}
+
+	// blue 1
+	/*
 	led[0] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
 	led[1] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
 	led[2] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
@@ -200,7 +213,24 @@ void ws2812_init(void) {
 	led[9] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
 	led[10] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
 	led[11] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+	*/
 
+
+	/*
+	// blue 2
+	led[0] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
+	led[1] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
+	led[2] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
+	led[3] = (struct cRGB){.g = 0, .r =0, .b=0x3F};
+	led[4] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+	led[5] = (struct cRGB){.g = 0, .r =0, .b=0x3F};
+	led[6] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
+	led[7] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
+	led[8] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
+	led[9] = (struct cRGB){.g = 0, .r =0, .b=0x3F};
+	led[10] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
+	led[11] = (struct cRGB){.g = 0, .r =0, .b=0x3F};
+	*/
 
 	/*
 	// red
@@ -284,6 +314,40 @@ void ws2812_shift(void) {
 	led[LED_COUNT-1].b = tempb;
 }
 
+void ws2812_fade(void) {
+	uint8_t value = led[0].b;
+	if (currentFadeDirection == LOW_TO_HIGH) {
+		if (value < 0xFF - 10) {
+			for(int i=0; i < LED_COUNT; i++) {
+				led[i].b = value + 10;
+			}
+		}
+		else {
+			currentFadeDirection = HIGH_TO_LOW;
+		}
+	}
+	if (currentFadeDirection == HIGH_TO_LOW) {
+		if (value > 10 + 10) {
+			for(int i=0; i < LED_COUNT; i++) {
+				led[i].b = value - 10;
+			}
+		}
+		else {
+			currentFadeDirection = LOW_TO_HIGH;
+			//currentFadeDirection = WAIT_LOW;
+			//wait_low_counter = WAIT_LOW_VALUE;
+		}
+	}
+	if (currentFadeDirection == WAIT_LOW) {
+		if (wait_low_counter > 0) {
+			wait_low_counter--;
+		}
+		else {
+			currentFadeDirection = LOW_TO_HIGH;
+		}
+	}
+}
+
 
 void ws2812_task(uint32_t currentTicks) {
 	myTicks = currentTicks;
@@ -319,9 +383,10 @@ void ws2812_task(uint32_t currentTicks) {
 	}
 	*/
 
-	if (math_calc_diff(currentTicks, lastEventTicks) > 5) {
+	if (math_calc_diff(currentTicks, lastEventTicks) > 2) {
 		lastEventTicks = currentTicks;
-		ws2812_shift();
+		//ws2812_shift();
+		ws2812_fade();
 		ws2812_update();
 	}
 

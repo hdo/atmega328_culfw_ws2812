@@ -8,7 +8,6 @@
 
 #include "ringbuffer.h"
 
-#include <Drivers/USB/USB.h>     // USB Functionality
 
 /* Macros: */
 #define GET_LINE_CODING			0x21
