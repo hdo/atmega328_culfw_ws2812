@@ -23,7 +23,6 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ringbuffer.c                              \
 		../../clib/rf_send.c                                 \
 		../../clib/rf_receive.c                              \
-		../../clib/memory.c                                  \
 		../../clib/serial.c                                  \
 		../../clib/ttydata.c                                 \
 		../../clib/light_ws2812.c                            \
