@@ -31,17 +31,8 @@
 #endif
 
 /* public prototypes */
-#ifdef HAS_ESA
-#define MAXMSG 20               // ESA messages
-#else
 #define MAXMSG 12               // EMEM messages
-#endif
 
-#ifdef HAS_REVOLT
-#ifndef LONG_PULSE
-#define LONG_PULSE
-#endif
-#endif
 
 
 void set_txreport(char *in);

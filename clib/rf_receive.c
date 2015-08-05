@@ -18,17 +18,7 @@
 #include "display.h"
 #include "clock.h"
 #include "fncollection.h"
-#include "fht.h"
 #include "ws2812.h"
-#ifdef HAS_LCD
-#include "pcf8833.h"
-#endif
-#include "fastrf.h"
-#include "rf_router.h"
-
-#ifdef HAS_ASKSIN
-#include "rf_asksin.h"
-#endif
 
 //////////////////////////
 // With a CUL measured RF timings, in us, high/low sum
@@ -75,11 +65,7 @@ static uint8_t bucket_nrused;             // Number of unprocessed buckets
 static uint8_t oby, obuf[MAXMSG], nibble; // parity-stripped output
 static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime;
-#ifdef LONG_PULSE
-static uint16_t hightime, lowtime;
-#else
 static uint8_t hightime, lowtime;
-#endif
 
 static void addbit(bucket_t *b, uint8_t bit);
 static void delbit(bucket_t *b);
@@ -287,100 +273,7 @@ analyze_hms(bucket_t *b)
   return 1;
 }
 
-#ifdef HAS_ESA
-uint8_t
-analyze_esa(bucket_t *b)
-{
-  input_t in;
-  in.byte = 0;
-  in.bit = 7;
-  in.data = b->data;
 
-  oby = 0;
-
-  if (b->state != STATE_ESA)
-       return 0;
-
-  if( (b->byteidx*8 + (7-b->bitidx)) != 144 )
-       return 0;
-
-  uint8_t salt = 0x89;
-  uint16_t crc = 0xf00f;
-  
-  for (oby = 0; oby < 15; oby++) {
-  
-       uint8_t byte = getbits(&in, 8, 1);
-     
-       crc += byte;
-    
-       obuf[oby] = byte ^ salt;
-       salt = byte + 0x24;
-       
-  }
-  
-  obuf[oby] = getbits(&in, 8, 1);
-  crc += obuf[oby];
-  obuf[oby++] ^= 0xff;
-
-  crc -= (getbits(&in, 8, 1)<<8);
-  crc -= getbits(&in, 8, 1);
-
-  if (crc) 
-       return 0;
-
-  return 1;
-}
-#endif
-
-#ifdef HAS_TX3
-uint8_t
-analyze_TX3(bucket_t *b)
-{
-  input_t in;
-  in.byte = 0;
-  in.bit = 7;
-  in.data = b->data;
-  uint8_t n, crc = 0;
-
-  if(b->byteidx != 4 || b->bitidx != 1)
-    return 0;
-
-  for(oby = 0; oby < 4; oby++) {
-    if(oby == 0) {
-      n = 0x80 | getbits(&in, 7, 1);
-    } else {
-      n = getbits(&in, 8, 1);
-    }
-    crc = crc + (n>>4) + (n&0xf);
-    obuf[oby] = n;
-  }
-
-  obuf[oby] = getbits(&in, 7, 1) << 1;
-  crc = (crc + (obuf[oby]>>4)) & 0xF;
-  oby++;
-
-  if((crc >> 4) != 0 || (obuf[0]>>4) != 0xA)
-    return 0;
-
-  return 1;
-}
-#endif
-
-#ifdef HAS_REVOLT
-uint8_t analyze_revolt(bucket_t *b)
-{
-  uint8_t sum=0;
-  if (b->byteidx != 12 || b->state != STATE_REVOLT || b->bitidx != 0)
-    return 0;
-  for (oby=0;oby<11;oby++) {
-    sum+=b->data[oby];
-    obuf[oby]=b->data[oby];
-  }
-  if (sum!=b->data[11])
-      return 0;
-  return 1;
-}
-#endif
 //////////////////////////////////////////////////////////////////////
 void
 RfAnalyze_Task(void)
@@ -390,9 +283,6 @@ RfAnalyze_Task(void)
 
   if(lowtime) {
     if(tx_report & REP_LCDMON) {
-#ifdef HAS_LCD
-      lcd_txmon(hightime, lowtime);
-#else
       uint8_t rssi = cc1100_readReg(CC1100_RSSI);    //  0..256
       rssi = (rssi >= 128 ? rssi-128 : rssi+128);    // Swap
       if(rssi < 64)                                  // Drop low and high 25%
@@ -402,7 +292,6 @@ RfAnalyze_Task(void)
       else 
         rssi = (rssi-80)>>3;
       DC('a'+rssi);
-#endif
     }
     if(tx_report & REP_MONITOR) {
       DC('r'); if(tx_report & REP_BINTIME) DC(hightime);
@@ -418,18 +307,6 @@ RfAnalyze_Task(void)
   LED_ON();
 
   b = bucket_array + bucket_out;
-
-#ifdef HAS_REVOLT
-  if(!datatype && analyze_revolt(b))
-    datatype = TYPE_REVOLT;
-#endif
-#ifdef LONG_PULSE
-  if(b->state != STATE_REVOLT && b->state != STATE_IT) {
-#endif
-#ifdef HAS_ESA
-  if(analyze_esa(b))
-    datatype = TYPE_ESA;
-#endif
 
   if(!datatype && analyze(b, TYPE_FS20)) {
     oby--;                                  // Separate the checksum byte
@@ -457,10 +334,6 @@ RfAnalyze_Task(void)
   if(!datatype && analyze_hms(b))
     datatype = TYPE_HMS;
 
-#ifdef HAS_TX3
-  if(!datatype && analyze_TX3(b))
-    datatype = TYPE_TX3;
-#endif
 
   if(!datatype) {
     // As there is no last rise, we have to add the last bit by hand
@@ -474,20 +347,6 @@ RfAnalyze_Task(void)
       delbit(b);
   }
 
-#ifdef HAS_HOERMANN
-  // This protocol is not yet understood. It should be last in the row!
-  if(!datatype && b->byteidx == 4 && b->bitidx == 4 &&
-     wave_equals(&b->zero, TSCALE(960), TSCALE(480))) {
-
-    addbit(b, wave_equals(&b->one, hightime, TSCALE(480)));
-    for(oby=0; oby < 5; oby++)
-      obuf[oby] = b->data[oby];
-    datatype = TYPE_HRM;
-  }
-#endif
-#ifdef LONG_PULSE
-}
-#endif
   if(datatype && (tx_report & REP_KNOWN)) {
 
     uint8_t isrep = 0;
@@ -509,14 +368,6 @@ RfAnalyze_Task(void)
       reptime = ticks;
 
     }
-
-    if(datatype == TYPE_FHT && !(tx_report & REP_FHTPROTO) &&
-       oby > 4 &&
-       (obuf[2] == FHT_ACK        || obuf[2] == FHT_ACK2    ||
-        obuf[2] == FHT_CAN_XMIT   || obuf[2] == FHT_CAN_RCV ||
-        obuf[2] == FHT_START_XMIT || obuf[2] == FHT_END_XMIT ||
-        (obuf[3] & 0x70) == 0x70))
-      isrep = 1;
 
     /*
     if(!isrep) {
@@ -607,11 +458,6 @@ RfAnalyze_Task(void)
 
   LED_OFF();
 
-#ifdef HAS_FHT_80b
-  if(datatype == TYPE_FHT) {
-    fht_hook(obuf);
-  }
-#endif
 }
 
 static void
@@ -626,15 +472,7 @@ reset_input(void)
 // data for SILENCE time, and we can put the data to be analysed
 ISR(TIMER1_COMPA_vect)
 {
-#ifdef LONG_PULSE
-  uint16_t tmp;
-#endif
   TIMSK1 = 0;                           // Disable "us"
-#ifdef LONG_PULSE
-  tmp=OCR1A;
-  OCR1A = TWRAP;                        // Wrap Timer
-  TCNT1=tmp;                            // reinitialize timer to measure times > SILENCE
-#endif
   if(tx_report & REP_MONITOR)
     DC('.');
 
@@ -723,24 +561,7 @@ delbit(bucket_t *b)
 // "Edge-Detected" Interrupt Handler
 ISR(CC1100_INTVECT)
 {  
-#ifdef HAS_FASTRF
-  if(fastrf_on) {
-    fastrf_on = 2;
-    return;
-  }
-#endif
-
-#ifdef HAS_RF_ROUTER
-  if(rf_router_status == RF_ROUTER_DATA_WAIT) {
-    rf_router_status = RF_ROUTER_GOT_DATA;
-    return;
-  }
-#endif
-#ifdef LONG_PULSE
-  uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
-#else
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
-#endif
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
@@ -753,24 +574,10 @@ ISR(CC1100_INTVECT)
     }
   }
 
-#ifdef HAS_ESA
-  if (b->state == STATE_ESA) {
-    if(c < TSCALE(375))
-      return;
-    if(c > TSCALE(625)) {
-      reset_input();
-      return;
-    }
-  }
-#endif
-
   //////////////////
   // Falling edge
   if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
     if( (b->state == STATE_HMS)
-#ifdef HAS_ESA
-     || (b->state == STATE_ESA) 
-#endif
     ) {
       addbit(b, 1);
       TCNT1 = 0;
@@ -783,9 +590,6 @@ ISR(CC1100_INTVECT)
   lowtime = c-hightime;
   TCNT1 = 0;                          // restart timer
   if( (b->state == STATE_HMS)
-#ifdef HAS_ESA
-     || (b->state == STATE_ESA) 
-#endif
   ) {
     addbit(b, 0);
     return;
@@ -795,25 +599,6 @@ ISR(CC1100_INTVECT)
   // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
   TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
   
-#ifdef HAS_REVOLT
-  if ((hightime > TSCALE(9000)) && (hightime < TSCALE(12000)) &&
-      (lowtime  > TSCALE(150))   && (lowtime  < TSCALE(540))) {
-    // Revolt
-    b->zero.hightime = 6;
-    b->zero.lowtime = 14;
-    b->one.hightime = 19;
-    b->one.lowtime = 14;
-    b->sync=1;
-    b->state = STATE_REVOLT;
-    b->byteidx = 0;
-    b->bitidx  = 7;
-    b->data[0] = 0;
-    OCR1A = SILENCE;
-    TIMSK1 = _BV(OCIE1A);
-    return;
-  } 
-#endif
-
   if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
 
 retry_sync:
@@ -839,25 +624,6 @@ retry_sync:
       if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
         b->state = STATE_HMS;
 
-#ifdef HAS_ESA
-      } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
-        b->state = STATE_ESA;
-  
-  OCR1A = 1000;
-  
-#endif
-#ifdef HAS_RF_ROUTER
-      } else if(rf_router_myid &&
-                check_rf_sync(hightime, lowtime) &&
-                check_rf_sync(b->zero.lowtime, b->zero.hightime)) {
-        //display_channel=DISPLAY_USB;
-        //DC('-');
-        //display_channel=0xff;
-        rf_router_status = RF_ROUTER_SYNC_RCVD;
-        reset_input();
-        return;
-#endif
-
       } else {
         b->state = STATE_COLLECT;
 
@@ -879,20 +645,6 @@ retry_sync:
     }
 
   } else 
-#ifdef HAS_REVOLT
-  if (b->state==STATE_REVOLT) { //STATE_REVOLT
-
-    if ((hightime < 11)) {
-      addbit(b,0);
-      b->zero.hightime = makeavg(b->zero.hightime, hightime);
-      b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-    } else {
-      addbit(b,1);
-      b->one.hightime = makeavg(b->one.hightime, hightime);
-      b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-    }
-  } else 
-#endif
     {                              // STATE_COLLECT, STATE_IT
     if(wave_equals(&b->one, hightime, lowtime)) {
       addbit(b, 1);
@@ -917,8 +669,5 @@ uint8_t
 rf_isreceiving()
 {
   return (bucket_array[bucket_in].state != STATE_RESET
-#ifdef HAS_FHT_80b
-        || fht80b_timeout != FHT_TIMER_DISABLED
-#endif
           );
 }

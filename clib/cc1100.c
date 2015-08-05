@@ -8,13 +8,6 @@
 #include "fncollection.h"
 #include "cc1100.h"
 
-#include "rf_asksin.h"  // asksin_on
-#include "rf_moritz.h"  // moritz_on
-
-#ifdef HAS_MORITZ
-#include "rf_moritz.h"
-#endif
-
 uint8_t cc_on;
 
 // NOTE: FS20 devices can receive/decode signals sent with PA ramping,
@@ -99,53 +92,6 @@ const PROGMEM const uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
  */
 };
 
-#if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
-const PROGMEM const uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
-// CULFW   IDX NAME     
-   0x07, // 00 IOCFG2 (x)    INT when a packet with CRC OK has been received
-   0x2E, // 01 IOCFG1        3-State
-   0x05, // 02 IOCFG0D (x)   Interrupt in TX underflow
-   0x0D, // 03 FIFOTHR (x)   TX:9 / RX:56, but irrelevant, see IOCFG2/IOCFG0
-   0xD3, // 04 SYNC1       
-   0x91, // 05 SYNC0       
-   0xFF, // 06 PKTLEN (x)    infinite
-   0x08, // 07 PKTCTRL1 (x)  CRC_AUTOFLUSH, no ADDR check, Append RSSI/LQI
-   0x05, // 08 PKTCTRL0 (x)  Packet Mode, Check CRC, Variable paket len
-   0x00, // 09 ADDR (x)    
-   0x00, // 0A CHANNR (x)  
-   0x0C, // 0B FSCTRL1 (x)   305kHz IF Freq (26000000/1024*12)
-   0x00, // 0C FSCTRL0 (x)   Freq Off
-   0x21, // 0D FREQ2 (x)     868.3MHz
-   0x65, // 0E FREQ1 (x)   
-   0x6A, // 0F FREQ0 (x)   
-   0x2D, // 10 MDMCFG4 (x)   Channel Bandwith: 203.1kHz 26000000/(8*(4+0)*2^2)
-   0x3B, // 11 MDMCFG3 (x)   DataRate: 250kHz ((256+59)*2^13)*26000000/(2^28)
-   0x13, // 12 MDMCFG2 (x)   Modulation: GFSK, Sync 30/32
-   0x22, // 13 MDMCFG1 (x)   Preamble: 4bytes
-   0xF8, // 14 MDMCFG0 (x)   Channel: 200kHz 26000000*(256+248)*2^2/2^18
-   0x62, // 15 DEVIATN (x)   127kHz 26000000/131072*(8+2)*2^6
-   0x07, // 16 MCSM2
-   0x3F, // 17 MCSM1         CCA: RSSI&RX, RX->RX, TX->RX
-   0x18, // 18 MCSM0 (x)     Calibration: IDLE->TX/RX
-   0x1D, // 19 FOCCFG (x)  
-   0x1C, // 1A BSCFG (x)   
-   0xC7, // 1B AGCCTRL2 (x)  No 3 highest DVGA gain, Max LNA, 42dB
-   0x00, // 1C AGCCTRL1 (x)
-   0xB0, // 1D AGCCTRL0 (x)  Avg.Len: 8samples
-   0x87, // 1E WOREVT1
-   0x6B, // 1F WOREVT0
-   0xF8, // 20 WORCTRL
-   0xB6, // 21 FREND1 (x)
-   0x11, // 22 FREND0 (x)
-   0xEA, // 23 FSCAL3 (x)
-   0x2A, // 24 FSCAL2 (x)
-   0x00, // 25 FSCAL1 (x)
-   0x1F, // 26 FSCAL0 (x)
-   0x41, // 27 RCCTRL1
-   0x00, // 28 RCCTRL0
-};
-
-#endif
 
 uint8_t
 cc1100_sendbyte(uint8_t data)
@@ -159,9 +105,6 @@ cc1100_sendbyte(uint8_t data)
 void
 ccInitChip(uint8_t *cfg)
 {
-#ifdef HAS_MORITZ
-  moritz_on = 0; //loading this configuration overwrites moritz cfg
-#endif
 
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
@@ -231,27 +174,7 @@ cc_factory_reset(void)
   uint8_t *t = EE_CC1100_CFG;
   for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++)
     ewb(t++, __LPM(CC1100_CFG+i));
-#if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
-  t = EE_FASTRF_CFG;
-  for(uint8_t i = 0; i < sizeof(FASTRF_CFG); i++)
-    ewb(t++, __LPM(FASTRF_CFG+i));
-#endif
 
-#ifdef MULTI_FREQ_DEVICE
-  // check 433MHz version marker and patch default frequency
-  if (!bit_is_set(MARK433_PIN, MARK433_BIT)) {
-    t = EE_CC1100_CFG + 0x0d;
-    ewb(t++, 0x10);
-    ewb(t++, 0xb0);
-    ewb(t++, 0x71);
-#if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
-    t = EE_FASTRF_CFG + 0x0d;
-    ewb(t++, 0x10);
-    ewb(t++, 0xb0);
-    ewb(t++, 0x71);
-#endif   
-  }
-#endif   
   cc_set_pa(8);
 }
 
@@ -356,24 +279,10 @@ ccStrobe(uint8_t strobe)
 void
 set_ccoff(void)
 {
-#ifdef BUSWARE_CUR
-  uint8_t cnt = 0xff;
-  while(cnt-- && (ccStrobe( CC1100_SIDLE ) & 0x70) != 0)
-    my_delay_us(10);
-  ccStrobe(CC1100_SPWD);
-#else
   ccStrobe(CC1100_SIDLE);
-#endif
 
   cc_on = 0;
 
-#ifdef HAS_ASKSIN
-  asksin_on = 0;
-#endif
-
-#ifdef HAS_MORITZ
-  moritz_on = 0;
-#endif
 }
 
 void
@@ -382,11 +291,4 @@ set_ccon(void)
   ccInitChip(EE_CC1100_CFG);
   cc_on = 1;
 
-#ifdef HAS_ASKSIN
-  asksin_on = 0;
-#endif
-
-#ifdef HAS_MORITZ
-  moritz_on = 0;
-#endif
 }

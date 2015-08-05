@@ -37,36 +37,8 @@ void do_wdt_enable(uint8_t t);
 #define EE_DUDETTE_PRIV      (EE_DUDETTE_MAC-16)		// 128bit RSA private key 
 #define EE_DUDETTE_PUBL      (EE_DUDETTE_PRIV-16)		// 128bit RSA public key
 
-#ifdef HAS_ETHERNET
-# define EE_MAC_ADDR         (EE_RF_ROUTER_ROUTER+1)
-# define EE_USE_DHCP         (EE_MAC_ADDR+6)                    // Offset x62
-# define EE_IP4_ADDR         (EE_USE_DHCP+1)
-# define EE_IP4_NETMASK      (EE_IP4_ADDR+4)
-# define EE_IP4_GATEWAY      (EE_IP4_NETMASK+4)                 // Offset x71
-# define EE_IP4_NTPSERVER    (EE_IP4_GATEWAY+4)                      
-# define EE_IP4_TCPLINK_PORT (EE_IP4_NTPSERVER+4)               // Offset x79
-# define EE_IP4_NTPOFFSET    (EE_IP4_TCPLINK_PORT+2)
-# define EE_ETH_LAST         (EE_IP4_NTPOFFSET+1)       // 
-#endif
 
-#ifdef HAS_LCD
-#ifdef HAS_ETHERNET
-# define EE_CONTRAST          EE_ETH_LAST
-#else
-# define EE_CONTRAST          (EE_FASTRF_CFG+EE_CC1100_CFG_SIZE)
-#endif
-# define EE_BRIGHTNESS        (EE_CONTRAST+1)
-# define EE_SLEEPTIME         (EE_BRIGHTNESS+1)
-# define EE_LCD_LAST          (EE_SLEEPTIME+1)
-#else
 # define EE_LCD_LAST          EE_ETH_LAST
-#endif
-
-#ifdef HAS_FS
-# define EE_LOGENABLED        (EE_LCD_LAST)
-# define EE_FS_LAST           (EE_LOGENABLED+1)
-#endif
-
 
 extern uint8_t led_mode;
 

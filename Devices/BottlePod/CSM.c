@@ -27,23 +27,9 @@
 #include "rf_receive.h"
 #include "rf_send.h"
 #include "ttydata.h"
-#include "fastrf.h"
-#include "rf_router.h"
 #include "memory.h"
 #include "ws2812.h"
 
-
-#ifdef HAS_ASKSIN
-#include "rf_asksin.h"
-#endif
-
-#ifdef HAS_MORITZ
-#include "rf_moritz.h"
-#endif
-
-#ifdef HAS_IRRX
-#include "ir.h"
-#endif
 
 
 const PROGMEM t_fntab fntab[] = {
@@ -53,35 +39,14 @@ const PROGMEM t_fntab fntab[] = {
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
-#ifdef HAS_ASKSIN
-  { 'A', asksin_func },
-#endif
-#ifdef HAS_MORITZ
-  { 'Z', moritz_func },
-#endif
-#ifdef HAS_IRRX
-  { 'I', ir_func },
-#endif
-#ifdef HAS_RAWSEND
-  { 'G', rawsend },
-  { 'M', em_send },
-  { 'K', ks_send },
-//  { 'S', esa_send },
-#endif
   { 'R', read_eeprom },
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
 
   { 'e', eeprom_factory_reset },
-#ifdef HAS_FASTRF
-  { 'f', fastrf_func },
-#endif
   { 'l', ledfunc },
   { 't', gettime },
-#ifdef HAS_RF_ROUTER
-  { 'u', rf_router_func },
-#endif
   { 'x', ccsetpa },
 
   { 0, 0 },
@@ -89,30 +54,11 @@ const PROGMEM t_fntab fntab[] = {
 
 volatile uint32_t ticks;
 
-void
-start_bootloader(void)
-{
-  cli();
-
-  /* move interrupt vectors to bootloader section and jump to bootloader */
-  MCUCR = _BV(IVCE);
-  MCUCR = _BV(IVSEL);
-
-#define jump_to_bootloader ((void(*)(void))0x1800)
-  jump_to_bootloader();
-}
-
 int
 main(void)
 {
   wdt_disable();
 
-#ifdef CSMV4
-
-  LED_ON_DDR  |= _BV( LED_ON_PIN );
-  LED_ON_PORT |= _BV( LED_ON_PIN );
-
-#endif
 
   led_init();
   LED_ON();
@@ -132,13 +78,7 @@ main(void)
 //  }
 
   // Setup the timers. Are needed for watchdog-reset
-#ifdef HAS_IRRX
-  ir_init();
-  // IR uses highspeed TIMER0 for sampling
-  OCR0A  = 1;                              // Timer0: 0.008s = 8MHz/256/2   == 15625Hz
-#else
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz
-#endif
   TCCR0B = _BV(CS02);
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);
@@ -158,11 +98,6 @@ main(void)
   input_handle_func = analyze_ttydata;
 
   display_channel = DISPLAY_USB;
-
-#ifdef HAS_RF_ROUTER
-  rf_router_init();
-  display_channel |= DISPLAY_RFROUTER;
-#endif
 
 
   LED_OFF();

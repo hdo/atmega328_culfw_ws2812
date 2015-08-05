@@ -22,11 +22,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/fncollection.c                            \
 		../../clib/ringbuffer.c                              \
 		../../clib/rf_send.c                                 \
-		../../clib/rf_asksin.c                               \
-		../../clib/rf_moritz.c                               \
 		../../clib/rf_receive.c                              \
-		../../clib/rf_router.c                               \
-		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                  \
 		../../clib/serial.c                                  \
 		../../clib/ttydata.c                                 \
