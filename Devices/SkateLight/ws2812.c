@@ -12,7 +12,10 @@
 #define WAIT_LOW 2
 
 #define WAIT_LOW_VALUE 5
-
+#define MIN_BRIGHTNESS 0
+#define EFFECT_NONE 0
+#define EFFECT_SPIN 1
+#define EFFECT_FADE 2
 
 const struct cRGB predefined[COLOR_COUNT] = {
 	    { 0xF8, 0xF0, 0xFF }, // 000 -> AliceBlue
@@ -158,6 +161,7 @@ const struct cRGB predefined[COLOR_COUNT] = {
 	    { 0xCD, 0x9A, 0x32 }, // 140 -> YellowGreen
 };
 
+
 uint8_t last_button = NO_BUTTON;
 uint8_t current_color_index = 9; // BLUE
 struct cRGB led[LED_COUNT];
@@ -166,6 +170,8 @@ uint32_t lastEventTicks = 0;
 uint8_t pendingUpdate = 0;
 uint8_t currentFadeDirection = HIGH_TO_LOW;
 uint8_t wait_low_counter = WAIT_LOW_VALUE;
+struct cRGB fadeSteps = {0, 0, 0};
+uint8_t current_effect_mode = EFFECT_SPIN;
 
 uint32_t math_calc_diff(uint32_t value1, uint32_t value2) {
 	if (value1 == value2) {
@@ -182,121 +188,87 @@ uint32_t math_calc_diff(uint32_t value1, uint32_t value2) {
 
 void ws2812_update(void) {
 	pendingUpdate = 0;
-	/*
-	for(uint8_t i=0; i < LED_COUNT; i++) {
-		led[i] = predefined[current_color_index];
-	}
-	*/
 	ws2812_setleds(led, LED_COUNT);
 }
 
+void ws2812_set_spin_effect(uint8_t color_index) {
+	current_effect_mode = EFFECT_SPIN;
+
+	// set first led
+	led[0] = predefined[color_index]; // 100% brightness
+
+	// set other leds
+	led[1].r = (led[0].r / 2); // 50% brightness
+	led[1].g = (led[0].g / 2); // 50% brightness
+	led[1].b = (led[0].b / 2); // 50% brightness
+	led[2].r = (led[0].r / 4); // 25% brightness
+	led[2].g = (led[0].g / 4); // 25% brightness
+	led[2].b = (led[0].b / 4); // 25% brightness
+	led[3] = led[2]; // 25% brightness
+	led[4] = led[2]; // 25% brightness
+	led[5] = led[1]; // 50% brightness
+	led[6] = led[0]; // 100% brightness
+	led[7] = led[1]; // 50% brightness
+	led[8] = led[2]; // 25% brightness
+	led[9] = led[2]; // 25% brightness
+	led[10] = led[2]; // 25% brightness
+	led[11] = led[1]; // 50% brightness
+}
+
+void ws2812_set_fade_effect(uint8_t color_index) {
+	current_effect_mode = EFFECT_FADE;
+
+	for(int i=0; i < LED_COUNT; i++) {
+		led[i] = predefined[color_index];
+	}
+	fadeSteps.r = led[0].r/20;
+	fadeSteps.g = led[0].g/20;
+	fadeSteps.b = led[0].b/20;
+	currentFadeDirection = HIGH_TO_LOW;
+}
+
+void ws2812_set_none_effect(uint8_t color_index) {
+	current_effect_mode = EFFECT_NONE;
+
+	for(int i=0; i < LED_COUNT; i++) {
+		led[i] = predefined[color_index];
+	}
+}
+
+
 void ws2812_init(void) {
-	current_color_index = 114; // BLUE
+	//current_color_index = 9;  // BLUE
+	//current_color_index = 51; // GREEN
+	//current_color_index = 114; // RED
+	//current_color_index = 2; // AQUA
+	current_color_index = 19; // CRIMSON
 
 
+
+	/*
 	// set blue
 	for(int i=0; i < LED_COUNT; i++) {
 		led[i] = (struct cRGB) {.r=0, .g=0, .b=0xFF};
 	}
-
-	// blue 1
-	/*
-	led[0] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
-	led[1] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
-	led[2] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
-	led[3] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
-	led[4] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
-	led[5] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
-	led[6] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
-	led[7] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
-	led[8] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
-	led[9] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
-	led[10] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
-	led[11] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
-	*/
-
-
-	/*
-	// blue 2
-	led[0] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
-	led[1] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
-	led[2] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
-	led[3] = (struct cRGB){.g = 0, .r =0, .b=0x3F};
-	led[4] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
-	led[5] = (struct cRGB){.g = 0, .r =0, .b=0x3F};
-	led[6] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
-	led[7] = (struct cRGB){.g = 0, .r =0, .b=0xFF};
-	led[8] = (struct cRGB){.g = 0, .r =0, .b=0x6F};
-	led[9] = (struct cRGB){.g = 0, .r =0, .b=0x3F};
-	led[10] = (struct cRGB){.g = 0, .r =0, .b=0x2F};
-	led[11] = (struct cRGB){.g = 0, .r =0, .b=0x3F};
 	*/
 
 	/*
-	// red
-	led[0] = (struct cRGB){.g = 0, .b =0, .r=0x6F};
-	led[1] = (struct cRGB){.g = 0, .b =0, .r=0xFF};
-	led[2] = (struct cRGB){.g = 0, .b =0, .r=0x6F};
-	led[3] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
-	led[4] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
-	led[5] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
-	led[6] = (struct cRGB){.g = 0, .b =0, .r=0x6F};
-	led[7] = (struct cRGB){.g = 0, .b =0, .r=0xFF};
-	led[8] = (struct cRGB){.g = 0, .b =0, .r=0x6F};
-	led[9] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
-	led[10] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
-	led[11] = (struct cRGB){.g = 0, .b =0, .r=0x2F};
-*/
-
-
-	/*
-
-	// green
-	led[0] = (struct cRGB){.r = 0, .b =0, .g=0x6F};
-	led[1] = (struct cRGB){.r = 0, .b =0, .g=0xFF};
-	led[2] = (struct cRGB){.r = 0, .b =0, .g=0x6F};
-	led[3] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
-	led[4] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
-	led[5] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
-	led[6] = (struct cRGB){.r = 0, .b =0, .g=0x6F};
-	led[7] = (struct cRGB){.r = 0, .b =0, .g=0xFF};
-	led[8] = (struct cRGB){.r = 0, .b =0, .g=0x6F};
-	led[9] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
-	led[10] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
-	led[11] = (struct cRGB){.r = 0, .b =0, .g=0x2F};
+	// set green
+	for(int i=0; i < LED_COUNT; i++) {
+		led[i] = (struct cRGB) {.r=0, .g=0xFF, .b=0};
+	}
 	*/
 
-
 	/*
-	// crimson
-	led[1] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
-	led[2] = (struct cRGB){.g = 0x04, .r = 0xCC, .b=0x2C};
-	led[3] = (struct cRGB){.g = 0x00, .r = 0xBC, .b=0x1C};
-	led[4] = (struct cRGB){.g = 0x00, .r = 0xAC, .b=0x0C};
-	led[5] = (struct cRGB){.g = 0x00, .r = 0x7C, .b=0x10};
-	led[6] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
-	led[7] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
-	led[8] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
-	led[9] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
-	led[10] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
-	led[11] = (struct cRGB){.g = 0x14, .r = 0xDC, .b=0x3C};
-*/
+	// set red
+	for(int i=0; i < LED_COUNT; i++) {
+		led[i] = (struct cRGB) {.r=0xFF, .g=0, .b=0};
+	}
+	*/
 
-	/*
-	// colorful
-	led[0] = (struct cRGB){.g = 0, .r =0, .b=0x50};
-	led[1] = (struct cRGB){.g = 0, .r = 0x50, .b=0x00};
-	led[2] = (struct cRGB){.g = 0x50, .r =0, .b=0x00};
-	led[3] = (struct cRGB){.g = 0, .r =0, .b=0x50};
-	led[4] = (struct cRGB){.g = 0, .r = 0x50, .b=0x00};
-	led[5] = (struct cRGB){.g = 0x50, .r =0, .b=0x00};
-	led[6] = (struct cRGB){.g = 0, .r =0, .b=0x50};
-	led[7] = (struct cRGB){.g = 0, .r = 0x50, .b=0x00};
-	led[8] = (struct cRGB){.g = 0x50, .r =0, .b=0x00};
-	led[9] = (struct cRGB){.g = 0, .r =0, .b=0x50};
-	led[10] = (struct cRGB){.g = 0, .r = 0x50, .b=0x00};
-	led[11] = (struct cRGB){.g = 0x50, .r =0, .b=0x00};
-*/
+	//ws2812_set_spin_effect(current_color_index);
+	//ws2812_set_fade_effect(current_color_index);
+	ws2812_set_none_effect(current_color_index);
 	ws2812_update();
 }
 
@@ -315,11 +287,15 @@ void ws2812_shift(void) {
 }
 
 void ws2812_fade(void) {
-	uint8_t value = led[0].b;
+	uint8_t valuer = led[0].r;
+	uint8_t valueg = led[0].g;
+	uint8_t valueb = led[0].b;
 	if (currentFadeDirection == LOW_TO_HIGH) {
-		if (value < 0xFF - 10) {
+		if (valuer <= 0xFF - fadeSteps.r && valueg <= 0xFF - fadeSteps.g && valueb <= 0xFF - fadeSteps.b) {
 			for(int i=0; i < LED_COUNT; i++) {
-				led[i].b = value + 10;
+				led[i].r = valuer + fadeSteps.r;
+				led[i].g = valueg + fadeSteps.g;
+				led[i].b = valueb + fadeSteps.b;
 			}
 		}
 		else {
@@ -327,15 +303,15 @@ void ws2812_fade(void) {
 		}
 	}
 	if (currentFadeDirection == HIGH_TO_LOW) {
-		if (value > 10 + 10) {
+		if (valuer >= MIN_BRIGHTNESS + fadeSteps.r && valueg >= MIN_BRIGHTNESS + fadeSteps.g && valueb >= MIN_BRIGHTNESS + fadeSteps.b) {
 			for(int i=0; i < LED_COUNT; i++) {
-				led[i].b = value - 10;
+				led[i].r = valuer - fadeSteps.r;
+				led[i].g = valueg - fadeSteps.g;
+				led[i].b = valueb - fadeSteps.b;
 			}
 		}
 		else {
 			currentFadeDirection = LOW_TO_HIGH;
-			//currentFadeDirection = WAIT_LOW;
-			//wait_low_counter = WAIT_LOW_VALUE;
 		}
 	}
 	if (currentFadeDirection == WAIT_LOW) {
@@ -348,24 +324,30 @@ void ws2812_fade(void) {
 	}
 }
 
+void ws2812_color_changed(void) {
+	switch(current_effect_mode) {
+		case EFFECT_NONE: ws2812_set_none_effect(current_color_index); break;
+		case EFFECT_SPIN: ws2812_set_spin_effect(current_color_index); break;
+		case EFFECT_FADE: ws2812_set_fade_effect(current_color_index); break;
+	}
+}
 
 void ws2812_task(uint32_t currentTicks) {
 	myTicks = currentTicks;
 
-	/*
 	if (last_button != NO_BUTTON) {
 		DS("BUTTON: ");
 		DH2(last_button);
 		DNL();
 		switch(last_button) {
-		case 0: current_color_index = 9;    break; // blue
-		case 1: current_color_index = 114;  break; // red
-		case 2: current_color_index = 51;   break; // green
-		case 3: current_color_index = 139;  break; // yellow
-		case 4: current_color_index = 19;   break; // crimson
-		case 5: current_color_index = 2;    break; // aqua
-		case 6: current_color_index = (current_color_index-1) % COLOR_COUNT; break;
-		case 7: current_color_index = (current_color_index+1) % COLOR_COUNT; break;
+		case 0: current_color_index = 9;   ws2812_color_changed(); break; // blue
+		case 1: current_color_index = 114; ws2812_color_changed(); break; // red
+		case 2: current_color_index = 51;  ws2812_color_changed(); break; // green
+		case 3: current_color_index = 19;  ws2812_color_changed(); break; // crimson
+		case 4: ws2812_set_spin_effect(current_color_index); break;
+		case 5: ws2812_set_fade_effect(current_color_index); break;
+		case 6: ws2812_set_none_effect(current_color_index); break;
+		case 7: ws2812_set_none_effect(9); break; // clear/black
 		}
 		DS("COLOR: ");
 		DH2(current_color_index);
@@ -373,9 +355,7 @@ void ws2812_task(uint32_t currentTicks) {
 		last_button = NO_BUTTON;
 		lastEventTicks = currentTicks;
 		pendingUpdate = 1;
-		//ws2812_update();
 	}
-	*/
 	/*
 	if (pendingUpdate && math_calc_diff(currentTicks, lastEventTicks) > 15) {
 		lastEventTicks = currentTicks; // reset
@@ -383,11 +363,13 @@ void ws2812_task(uint32_t currentTicks) {
 	}
 	*/
 
-	if (math_calc_diff(currentTicks, lastEventTicks) > 2) {
+	if (math_calc_diff(currentTicks, lastEventTicks) > 5) {
 		lastEventTicks = currentTicks;
-		//ws2812_shift();
-		ws2812_fade();
-		ws2812_update();
+		switch(current_effect_mode) {
+			case EFFECT_NONE:ws2812_update(); break;
+			case EFFECT_SPIN:ws2812_shift(); ws2812_update(); break;
+			case EFFECT_FADE:ws2812_fade(); ws2812_update(); break;
+		}
 	}
 
 	return;
