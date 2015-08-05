@@ -34,7 +34,6 @@ SRC = $(TARGET).c                                                    \
 		../../clib/light_ws2812.c                            \
 		./ws2812.c                            \
 		../../clib/spi.c                                     
-#		../../clib/dogm16x.c                                 \
 #		../../clib/ir.c                                      \
 #		../../clib/irmp.c                                    \
 

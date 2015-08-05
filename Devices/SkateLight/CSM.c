@@ -42,9 +42,6 @@
 #include "rf_moritz.h"
 #endif
 
-#ifdef HAS_DOGM
-#include "dogm16x.h"
-#endif
 
 #ifdef HAS_IRRX
 #include "ir.h"
@@ -66,9 +63,6 @@ const PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_IRRX
   { 'I', ir_func },
-#endif
-#ifdef HAS_DOGM
-  { 'D', dogm_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
@@ -162,9 +156,6 @@ main(void)
 
   uart_init( UART_BAUD_SELECT_DOUBLE_SPEED(UART_BAUD_RATE,F_CPU) );
 
-#ifdef HAS_DOGM
-  dogm_init();
-#endif
 
   fht_init();
   tx_init();
@@ -177,9 +168,6 @@ main(void)
   display_channel |= DISPLAY_RFROUTER;
 #endif
 
-#ifdef HAS_DOGM
-  display_channel |= DISPLAY_DOGM;
-#endif
 
   LED_OFF();
 

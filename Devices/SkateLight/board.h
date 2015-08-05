@@ -74,13 +74,6 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
 #ifdef TUXRADIO
-#define HAS_DOGM
-#define DOGM_RS_DDR             DDRA
-#define DOGM_RS_PORT            PORTA
-#define DOGM_RS_PIN             4
-#define DOGM_CS_DDR             DDRA
-#define DOGM_CS_PORT            PORTA
-#define DOGM_CS_PIN             5
 
 #define HAS_IRRX
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
