@@ -412,8 +412,8 @@ RfAnalyze_Task(void)
 
       // DH2(obuf[2]); // button code
 
-      // only accept code from remote with CODE 0X1BE4
-      if (obuf[0] == 0x1B && obuf[1] == 0xE4) {
+      // only accept code from remote with CODE 0X394B
+      if (obuf[0] == 0x39 && obuf[1] == 0x4B) {
           ws2812_register_remote_button(obuf[2]);
       }
 
