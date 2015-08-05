@@ -33,8 +33,6 @@ SRC = $(TARGET).c                                                    \
 		../../clib/light_ws2812.c                            \
 		./ws2812.c                            \
 		../../clib/spi.c                                     
-#		../../clib/ir.c                                      \
-#		../../clib/irmp.c                                    \
 
 
 OPT = s
