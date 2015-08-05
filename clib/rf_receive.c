@@ -365,36 +365,7 @@ analyze_TX3(bucket_t *b)
   return 1;
 }
 #endif
-#ifdef HAS_IT
-uint8_t analyze_it(bucket_t *b)
-{
-  uint8_t i,j,itbit;
-  if (b->byteidx != 3 || b->bitidx != 7 || b->state != STATE_IT)
-    return 0;
-  /*oby=0;
-  obuf[oby]=0;
-  for (i=0;i<3;i++) {
-    for (j=0;j<8;j=j+2) {
-      obuf[oby]=obuf[oby]<<1;
-      itbit=(b->data[i]>>j)&3;
-      if (itbit == 1) {
-        obuf[oby] |= 1;
-      } else if (itbit>1)
-        return 0;
-    }
-    if (i==1) {
-      oby++;
-      obuf[oby]=0;
-    }
 
-  }
-  nibble=1;oby++;
-  */
-  for (oby=0;oby<3;oby++)
-    obuf[oby]=b->data[oby];
-  return 1;
-}
-#endif
 #ifdef HAS_REVOLT
 uint8_t analyze_revolt(bucket_t *b)
 {
@@ -448,10 +419,6 @@ RfAnalyze_Task(void)
 
   b = bucket_array + bucket_out;
 
-#ifdef HAS_IT
-  if(!datatype && analyze_it(b))
-    datatype = TYPE_IT;
-#endif
 #ifdef HAS_REVOLT
   if(!datatype && analyze_revolt(b))
     datatype = TYPE_REVOLT;
@@ -845,24 +812,6 @@ ISR(CC1100_INTVECT)
     TIMSK1 = _BV(OCIE1A);
     return;
   } 
-#endif
-#ifdef HAS_IT
-  if ((hightime < TSCALE(500)) &&  (hightime > TSCALE(200)) &&
-             (lowtime  < TSCALE(12160)) && (lowtime > TSCALE(9000))) {
-    // Intertechno
-    b->zero.hightime = hightime; 
-    b->zero.lowtime = hightime*3+1;
-    b->one.hightime = hightime*3+1;
-    b->one.lowtime = hightime;
-    b->sync=1;
-    b->state = STATE_IT;
-    b->byteidx = 0;
-    b->bitidx  = 7;
-    b->data[0] = 0;
-    OCR1A = SILENCE;
-    TIMSK1 = _BV(OCIE1A);
-    return;
-  }
 #endif
 
   if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
