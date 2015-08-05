@@ -50,9 +50,6 @@
 #include "ir.h"
 #endif
 
-#ifdef HAS_SOMFY_RTS
-#include "somfy_rts.h"
-#endif
 
 const PROGMEM t_fntab fntab[] = {
 
@@ -78,9 +75,6 @@ const PROGMEM t_fntab fntab[] = {
   { 'M', em_send },
   { 'K', ks_send },
 //  { 'S', esa_send },
-#endif
-#ifdef HAS_SOMFY_RTS
-  { 'Y', somfy_rts_func },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
