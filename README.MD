@@ -1,7 +1,13 @@
-My CULFW fork for the Arduinio Mini Pro 8MHZ board
-
 Original License see: ./license/
 Taken from: http://culfw.de/culfw.html
+
+
+My CULFW fork for the Arduinio Mini Pro 8MHZ board
+
+This is a project based on CULFW for my WS2812 projects.
+
+My intention is to use the FS20 remote part for my own led projects.
+
 
 Changed for working with custom Arduino Mini Pro 8MHz and CC1101 board.
 
@@ -27,14 +33,4 @@ Flash (Arduino Mini Pro 8MHZ bootloader):
 
 ```
 avrdude -pm328p -b57600 -cSTK500v1 -P<serial port> -Uflash:w:<firmware hex-file>:i
-```
-
-Test:
-
-```
-minicom -b 38400
-
-V<CR>  -> Version
-Ar<CR> -> listen to Askin  (ELV Homematic)
-Zr<CR> -> listen to Moritz (ELV MAX)
 ```
