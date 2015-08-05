@@ -237,11 +237,11 @@ void ws2812_set_none_effect(uint8_t color_index) {
 
 
 void ws2812_init(void) {
-	//current_color_index = 9;  // BLUE
+	current_color_index = 9;  // BLUE
 	//current_color_index = 51; // GREEN
 	//current_color_index = 114; // RED
 	//current_color_index = 2; // AQUA
-	current_color_index = 19; // CRIMSON
+	//current_color_index = 19; // CRIMSON
 
 
 
@@ -266,9 +266,9 @@ void ws2812_init(void) {
 	}
 	*/
 
-	//ws2812_set_spin_effect(current_color_index);
+	ws2812_set_spin_effect(current_color_index);
 	//ws2812_set_fade_effect(current_color_index);
-	ws2812_set_none_effect(current_color_index);
+	//ws2812_set_none_effect(current_color_index);
 	ws2812_update();
 }
 
